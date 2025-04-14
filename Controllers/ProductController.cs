@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using WebAPI.models;
 using WebAPI.Services.Product;
 using WebAPI.Dto.Product;
@@ -11,28 +12,46 @@ namespace WebAPI.Controllers
     public class ProductController(IProductInterface productInterface) : ControllerBase
     {
         private readonly IProductInterface _productInterface = productInterface;
-        [HttpGet("GetProducts")]
-        public async Task<ActionResult<ResponseModel<List<ProductModel>>>> GetProducts(){
+
+        [AllowAnonymous]
+        [HttpGet("products")]
+        public async Task<ActionResult<ResponseModel<List<GetProductDto>>>> GetProducts(){
             var products = await _productInterface.GetProducts();
             return Ok(products);
         }
-        [HttpGet("GetProduct")]
-        public async Task<ActionResult<ResponseModel<ProductModel>>> GetProduct(int Id){
+        [AllowAnonymous]
+        [HttpGet("categoryproducts")]
+        public async Task<ActionResult<ResponseModel<List<GetProductDto>>>> GetCategoryProducts(string Id){
+            var products = await _productInterface.GetCategoryProducts(Id);
+            return Ok(products);
+        }
+        [AllowAnonymous]
+        [HttpGet("product")]
+        public async Task<ActionResult<ResponseModel<ProductModel>>> GetProduct(string Id){
             var product = await _productInterface.GetProduct(Id);
             return Ok(product);
         }
-        [HttpPost("CreateProduct")]
-        public async Task<ActionResult<ResponseModel<ProductModel>>> CreateProduct(CreateProductDto newProduct){
+        [AllowAnonymous]
+        [HttpGet("search")]
+        public async Task<ActionResult<ResponseModel<List<GetProductDto>>>> SearchProduct(string searchedProduct){
+            var products = await _productInterface.SearchProduct(searchedProduct);
+            return Ok(products);
+        }
+        [Authorize(Policy = "AdminOnly")]
+        [HttpPost("product")]
+        public async Task<ActionResult<ResponseModel<GetProductDto>>> CreateProduct(CreateProductDto newProduct){
             var product = await _productInterface.CreateProduct(newProduct);
             return Ok(product);
         }
-        [HttpPatch("UpdateProduct")]
-        public async Task<ActionResult<ResponseModel<ProductModel>>> UpdateProduct(int Id, UpdateProductDto updateProduct){
+        [Authorize(Policy = "AdminOnly")]
+        [HttpPatch("product")]
+        public async Task<ActionResult<ResponseModel<GetProductDto>>> UpdateProduct(string Id, UpdateProductDto updateProduct){
             var product = await _productInterface.UpdateProduct(Id, updateProduct);
             return Ok(product);
         }
-        [HttpDelete("DeleteProduct")]
-        public async Task<ActionResult<ResponseModel<ProductModel>>> DeleteProduct(int Id){
+        [Authorize(Policy = "AdminOnly")]
+        [HttpDelete("product")]
+        public async Task<ActionResult<ResponseModel<GetProductDto>>> DeleteProduct(string Id){
             var product = await _productInterface.DeleteProduct(Id);
             return Ok(product);
         }

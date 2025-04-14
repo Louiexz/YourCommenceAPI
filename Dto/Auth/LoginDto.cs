@@ -1,4 +1,4 @@
-namespace WebAPI.Dto.User
+namespace WebAPI.Dto.Auth
 {
     public class LoginDto
     {

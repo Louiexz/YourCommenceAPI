@@ -12,40 +12,8 @@ namespace WebAPI.Services.User
         {
             _context = context;
         }
-        public async Task<ResponseModel<UserModel>> SignUp(CreateUserDto newUser)
-        {
-            ResponseModel<UserModel> resposta = new ResponseModel<UserModel>();
-            try{
-                var checkUserEmail = await _context.Users.Find(bankCategory => bankCategory.Email == newUser.Email).FirstOrDefaultAsync();
 
-                if (checkUserEmail != null){
-                    resposta.Message = $"Email already taken.";    
-                    return resposta;
-                }
-                var checkUserUsername = await _context.Users.Find(bankCategory => bankCategory.Username == newUser.Username).FirstOrDefaultAsync();
-
-                if (checkUserUsername != null){
-                    resposta.Message = $"Username already taken.";    
-                    return resposta;
-                }
-
-                var user = new UserModel{
-                    Username = newUser.Username,
-                    Password = newUser.Password,
-                    Email = newUser.Email,
-                };
-                await _context.Users.InsertOneAsync(user);
-
-                resposta.Message = $"User created sucessfully.";
-                return resposta;
-            }catch(Exception e) {
-                resposta.Message = e.Message;
-                resposta.Status = false;
-                return resposta;
-            }
-        }
-
-        public async Task<ResponseModel<UserModel>> DeleteUser(int Id)
+        public async Task<ResponseModel<UserModel>> DeleteUser(string Id)
         {
             ResponseModel<UserModel> resposta = new ResponseModel<UserModel>();
             try{
@@ -64,7 +32,7 @@ namespace WebAPI.Services.User
             }
         }
 
-        public async Task<ResponseModel<UserModel>> GetUser(int Id)
+        public async Task<ResponseModel<UserModel>> GetUser(string Id)
         {
             ResponseModel<UserModel> resposta = new ResponseModel<UserModel>();
             try{
@@ -84,41 +52,8 @@ namespace WebAPI.Services.User
                 return resposta;
             }
         }
-        public async Task<ResponseModel<UserModel>> SignIn(LoginDto userLogin)
-        {
-            ResponseModel<UserModel> resposta = new ResponseModel<UserModel>();
-            try{
-                UserModel registeredUser;
 
-                if (userLogin.Credential.Contains("@")) {
-                    registeredUser = await _context.Users
-                        .Find(bankCategory => bankCategory.Email == userLogin.Credential).FirstOrDefaultAsync();
-                } else {
-                    registeredUser = await _context.Users
-                        .Find(bankCategory => bankCategory.Username == userLogin.Credential).FirstOrDefaultAsync();
-                }
-
-                if (registeredUser == null){
-                    resposta.Message = $"User don't exist.";    
-                    return resposta;
-                }
-                registeredUser = await _context.Users.Find(bankCategory => bankCategory.Password == userLogin.Password).FirstOrDefaultAsync();
-                
-                if (registeredUser == null){
-                    resposta.Message = $"Wrong password or credential.";    
-                    return resposta;
-                }
-
-                resposta.Message = $"User {registeredUser.Username} logged succesfully.";
-                return resposta;
-            }catch(Exception e) {
-                resposta.Message = e.Message;
-                resposta.Status = false;
-                return resposta;
-            }
-        }
-
-        public async Task<ResponseModel<UserModel>> UpdateUser(int Id, UpdateUserDto updateUser)
+        public async Task<ResponseModel<UserModel>> UpdateUser(string Id, UpdateUserDto updateUser)
         {
             ResponseModel<UserModel> resposta = new ResponseModel<UserModel>();
             try{

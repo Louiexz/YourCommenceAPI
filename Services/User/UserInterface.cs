@@ -5,10 +5,8 @@ namespace WebAPI.Services.User
 {
     public interface IUserInterface
     {
-        Task<ResponseModel<UserModel>> SignUp(CreateUserDto newUser);
-        Task<ResponseModel<UserModel>> GetUser(int Id);
-        Task<ResponseModel<UserModel>> SignIn(LoginDto userLogin);
-        Task<ResponseModel<UserModel>> UpdateUser(int Id, UpdateUserDto newUser);
-        Task<ResponseModel<UserModel>> DeleteUser(int Id);
+        Task<ResponseModel<UserModel>> GetUser(string Id);
+        Task<ResponseModel<UserModel>> UpdateUser(string Id, UpdateUserDto newUser);
+        Task<ResponseModel<UserModel>> DeleteUser(string Id);
     }
 }

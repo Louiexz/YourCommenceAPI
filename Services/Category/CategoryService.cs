@@ -2,23 +2,36 @@ using MongoDB.Driver;
 using WebAPI.Data;
 using WebAPI.models;
 using WebAPI.Dto.Category;
+using WebAPI.Services.Image;
 
 namespace WebAPI.Services.Category
 {
-    public class CategoryService : ICategoryInterface
+    public class CategoryService(
+        AppDbContext context, ImageService imageService) : ICategoryInterface
     {
-        private readonly AppDbContext _context;
-        public CategoryService(AppDbContext context)
-        {
-            _context = context;
-        }
+        private readonly AppDbContext _context = context;
+        private readonly ImageService _imageService = imageService;
+
         public async Task<ResponseModel<CategoryModel>> CreateCategory(CreateCategoryDto newCategory)
         {
             ResponseModel<CategoryModel> resposta = new();
             try{
+
+                CategoryModel checkCategory = await _context.Categories
+                    .Find(bankCategory => bankCategory.Name == newCategory.Name).FirstOrDefaultAsync();
+
+                if (checkCategory != null)
+                {
+                    resposta.Message = $"Category already exist.";
+                    return resposta;
+                }
+
+                var ids = _imageService.CreateImages(newCategory.Files);
+
                 var category = new CategoryModel {
                     Name = newCategory.Name,
                     Description = newCategory.Description,
+                    ImagesId = await ids,
                 };
                 await _context.Categories.InsertOneAsync(category);
 
@@ -31,7 +44,7 @@ namespace WebAPI.Services.Category
             }
         }
 
-        public async Task<ResponseModel<CategoryModel>> DeleteCategory(int Id)
+        public async Task<ResponseModel<CategoryModel>> DeleteCategory(string Id)
         {
             ResponseModel<CategoryModel> resposta = new ResponseModel<CategoryModel>();
             try{
@@ -66,7 +79,7 @@ namespace WebAPI.Services.Category
             }
         }
 
-        public async Task<ResponseModel<CategoryModel>> GetCategory(int Id)
+        public async Task<ResponseModel<CategoryModel>> GetCategory(string Id)
         {
             ResponseModel<CategoryModel> resposta = new ResponseModel<CategoryModel>();
             try{
@@ -86,7 +99,7 @@ namespace WebAPI.Services.Category
             }
         }
 
-        public async Task<ResponseModel<CategoryModel>> UpdateCategory(int Id, UpdateCategoryDto updateCategory)
+        public async Task<ResponseModel<CategoryModel>> UpdateCategory(string Id, UpdateCategoryDto updateCategory)
         {
             ResponseModel<CategoryModel> resposta = new ResponseModel<CategoryModel>();
             try{

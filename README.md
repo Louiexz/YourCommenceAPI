@@ -23,7 +23,7 @@ Esta é a API backend de um sistema de e-commerce desenvolvido em C# com .NET. O
    {
      "DatabaseSettings": {
        "ConnectionString": "mongodb://localhost:27017",
-       "DatabaseName": "ecommerce_db"
+       "DatabaseName": "sua_db"
      },
      "Jwt": {
        "Key": "sua-chave-secreta",
@@ -38,32 +38,43 @@ Esta é a API backend de um sistema de e-commerce desenvolvido em C# com .NET. O
    ```
 
 ## Endpoints Principais
+
 ### Autenticação
-- `POST /api/auth/login`: Autentica um usuário e retorna um token JWT.
-- `POST /api/auth/register`: Registra um novo usuário.
+- `POST /api/Auth/login`: Autentica um usuário e retorna um token JWT.
+- `POST /api/Auth/user`: Registra um novo usuário.
+- `POST /api/Auth/logout`: Desloga o usuário.
+
+### Usuários
+- `GET /api/User/user{id}`: Obtém detalhes de um usuário.
+- `PATCH /api/User/user{id}`: Atualiza um usuário.
+- `DELETE /api/User/user{id}`: Remove um usuário (admin).
 
 ### Categorias
-- `GET /api/GetCategories`: Lista todas as categorias.
-- `GET /api/GetCategory/{id}`: Obtém detalhes de uma categoria.
-- `POST /api/CreateCategory`: Cria uma nova categoria (admin).
-- `PATCH /api/UpdateCategory/{id}`: Atualiza uma categoria (admin).
+- `GET /api/Categoty/categories`: Lista todas as categorias.
+- `GET /api/Category/category{id}`: Obtém detalhes de uma categoria.
+- `POST /api/Category`: Cria uma nova categoria (admin).
+- `PATCH /api/Category/{id}`: Atualiza uma categoria (admin).
 - `DELETE /api/DeleteCategory/{id}`: Remove uma categoria (admin).
 
 ### Produtos
-- `GET /api/GetProducts`: Lista todos os produtos.
-- `GET /api/GetProduct/{id}`: Obtém detalhes de um produto.
-- `POST /api/CreateProduct`: Cria um novo produto (admin).
-- `PATCH /api/UpdateProduct/{id}`: Atualiza um produto (admin).
-- `DELETE /api/DeleteProduct/{id}`: Remove um produto (admin).
+- `GET /api/Product/products`: Lista todos os produtos.
+- `GET /api/Product/categoryproducts{id}`: Lista produtos por categoria.
+- `GET /api/Product/search{product}`: Procura por produtos.
+- `GET /api/Product/product{id}`: Obtém detalhes de um produto.
+- `POST /api/Product/product`: Cria um novo produto (admin).
+- `PATCH /api/Product/product{id}`: Atualiza um produto (admin).
+- `DELETE /api/Product/product{id}`: Remove um produto (admin).
 
-### Usuários
-- `POST /api/SignIn`: Autenticar usuário.
-- `POST /api/SignUp`: Cadastrar usuário.
-- `GET /api/GetUser/{id}`: Obtém detalhes de um usuário.
-- `PATCH /api/UpdateUser/{id}`: Atualiza um usuário.
-- `DELETE /api/DeleteUser/{id}`: Remove um usuário (admin).
+### Imagens
+- `GET /api/Image/image{id}`: Obtém uma imagem pelo ID.
 
 ## Testando a API
+
+- Utilize o Swagger para testar os endpoints diretamente:
+  ```sh
+  http://localhost:5000/swagger/index.html
+  ```
+- Para autenticação, utilize o token JWT obtido no endpoint de login.
 - Acesse a documentação interativa via Swagger:
   ```sh
   http://localhost:5000/swagger
@@ -71,8 +82,11 @@ Esta é a API backend de um sistema de e-commerce desenvolvido em C# com .NET. O
 - Utilize o Postman para testar os endpoints manualmente.
 
 ## Contribuição
+
 1. Fork o repositório.
 2. Crie um branch para sua funcionalidade (`git checkout -b minha-feature`).
 3. Commit suas alterações (`git commit -m 'Adiciona nova funcionalidade'`).
 4. Push para o branch (`git push origin minha-feature`).
 5. Abra um Pull Request.
+
+Contribuições são bem-vindas! Sinta-se à vontade para abrir um Pull Request ou relatar problemas.

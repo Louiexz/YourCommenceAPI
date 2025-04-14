@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
+using System.ComponentModel.DataAnnotations.Schema;
 namespace WebAPI.Dto.Product
 {
     public class UpdateProductDto
@@ -12,6 +8,9 @@ namespace WebAPI.Dto.Product
         public double? Price { get; set; }
         public double? Sale { get; set; }
         public int? Quantity { get; set; }
-        public int? Category { get; set; }
+        public string? Category { get; set; }
+
+        [NotMapped]
+        public List<IFormFile>? Files { get; set; }
     }
 }

@@ -7,20 +7,16 @@ namespace WebAPI.models
     public class ProductModel
     {
         [BsonId]
-        public int Id { get; set; }
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? Id { get; set; }
 
         [BsonElement("name")]
         [Required(ErrorMessage = "Name is required.")]
-#pragma warning disable CS8618 // O campo não anulável precisa conter um valor não nulo ao sair do construtor. Considere adicionar o modificador "obrigatório" ou declarar como anulável.
-        public string Name { get; set; }
-#pragma warning restore CS8618 // O campo não anulável precisa conter um valor não nulo ao sair do construtor. Considere adicionar o modificador "obrigatório" ou declarar como anulável.
+        public required string Name { get; set; }
 
         [BsonElement("description")]
-        [Required(ErrorMessage = "Description is required.")]
-#pragma warning disable CS8618 // O campo não anulável precisa conter um valor não nulo ao sair do construtor. Considere adicionar o modificador "obrigatório" ou declarar como anulável.
-        public string Description { get; set; }
-#pragma warning restore CS8618 // O campo não anulável precisa conter um valor não nulo ao sair do construtor. Considere adicionar o modificador "obrigatório" ou declarar como anulável.
-
+        public string? Description { get; set; }
+        
         [BsonElement("price")]
         [Required(ErrorMessage = "Price is required")]
         [Range(0, double.MaxValue, ErrorMessage = "Price must be a positive number.")]
@@ -44,8 +40,10 @@ namespace WebAPI.models
 
         [BsonElement("category")]
         [Required(ErrorMessage = "Category is required")]
-#pragma warning disable CS8618 // O campo não anulável precisa conter um valor não nulo ao sair do construtor. Considere adicionar o modificador "obrigatório" ou declarar como anulável.
-        public CategoryModel Category { get; set; }
-#pragma warning restore CS8618 // O campo não anulável precisa conter um valor não nulo ao sair do construtor. Considere adicionar o modificador "obrigatório" ou declarar como anulável.
+        public required List<CategoryModel> Category { get; set; }
+
+        [BsonElement("image")]
+        [Required(ErrorMessage = "Images are required")]
+        public required List<string> ImagesId { get; set; }
     }
 }

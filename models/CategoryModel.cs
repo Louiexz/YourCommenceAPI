@@ -7,12 +7,14 @@ namespace WebAPI.models
     public class CategoryModel
     {
         [BsonId]
-        public int Id { get; set; }
+        [BsonRepresentation(BsonType.ObjectId)]
+#pragma warning disable CS8618 // O campo não anulável precisa conter um valor não nulo ao sair do construtor. Considere adicionar o modificador "obrigatório" ou declarar como anulável.        
+        public string Id { get; set; }
+#pragma warning disable CS8618 // O campo não anulável precisa conter um valor não nulo ao sair do construtor. Considere adicionar o modificador "obrigatório" ou declarar como anulável.
+
         [BsonElement("name")]
         [Required(ErrorMessage = "name is required.")]
-#pragma warning disable CS8618 // O campo não anulável precisa conter um valor não nulo ao sair do construtor. Considere adicionar o modificador "obrigatório" ou declarar como anulável.
         public string Name { get; set; }
-#pragma warning restore CS8618 // O campo não anulável precisa conter um valor não nulo ao sair do construtor. Considere adicionar o modificador "obrigatório" ou declarar como anulável.
 
         [BsonElement("description")]
         public string? Description { get; set; }
@@ -22,5 +24,9 @@ namespace WebAPI.models
 
         [BsonElement("updated_at")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        [BsonElement("image")]
+        [Required(ErrorMessage = "Images are required")]
+        public List<string> ImagesId { get; set; }
     }
 }
