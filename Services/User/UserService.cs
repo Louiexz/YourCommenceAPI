@@ -1,21 +1,24 @@
 using MongoDB.Driver;
 using WebAPI.Data;
-using WebAPI.models;
 using WebAPI.Dto.User;
+using WebAPI.View.User;
+using WebAPI.models;
 
 namespace WebAPI.Services.User
 {
     public class UserService : IUserInterface
     {
         private readonly AppDbContext _context;
-        public UserService(AppDbContext context)
-        {
+        private readonly IUserView _userView;
+        
+        public UserService(AppDbContext context, IUserView view){
             _context = context;
-        }
+            _userView = view;
+        }        
 
         public async Task<ResponseModel<UserModel>> DeleteUser(string Id)
         {
-            ResponseModel<UserModel> resposta = new ResponseModel<UserModel>();
+            var resposta = new ResponseModel<UserModel>();
             try{
                 var user = await _context.Users.DeleteOneAsync(bankUser => bankUser.Id == Id);
 
@@ -34,7 +37,7 @@ namespace WebAPI.Services.User
 
         public async Task<ResponseModel<UserModel>> GetUser(string Id)
         {
-            ResponseModel<UserModel> resposta = new ResponseModel<UserModel>();
+            var resposta = new ResponseModel<UserModel>();
             try{
                 var user = await _context.Users.Find(bankCategory => bankCategory.Id == Id).FirstOrDefaultAsync();
 
@@ -55,7 +58,7 @@ namespace WebAPI.Services.User
 
         public async Task<ResponseModel<UserModel>> UpdateUser(string Id, UpdateUserDto updateUser)
         {
-            ResponseModel<UserModel> resposta = new ResponseModel<UserModel>();
+            var resposta = new ResponseModel<UserModel>();
             try{
                 var user = await _context.Users.Find(bankUser => bankUser.Id == Id).FirstOrDefaultAsync();
 
@@ -64,20 +67,8 @@ namespace WebAPI.Services.User
                     resposta.Message = $"User doesn't exist.";
                     return resposta;
                 }
+                user = _userView.UpdateUser(user, updateUser);
 
-                foreach (var property in updateUser.GetType().GetProperties())
-                {
-                    var newValue = property.GetValue(updateUser);
-                    if (newValue != null)
-                    {
-                        var userProperty = user.GetType().GetProperty(property.Name);
-                        if (userProperty != null && userProperty.CanWrite)
-                        {
-                            userProperty.SetValue(user, newValue);
-                        }
-                    }
-                }
-                user.UpdatedAt = DateTime.UtcNow;
                 await _context.Users.ReplaceOneAsync(bankUser => bankUser.Id == Id, user);
 
                 resposta.Message = $"User updated sucessfully.";

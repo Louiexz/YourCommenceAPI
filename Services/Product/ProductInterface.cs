@@ -1,6 +1,5 @@
-using WebAPI.models;
 using WebAPI.Dto.Product;
-using Microsoft.Identity.Client;
+using WebAPI.models;
 
 namespace WebAPI.Services.Product
 {

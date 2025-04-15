@@ -1,17 +1,22 @@
-using WebAPI.models;
 using WebAPI.Data;
-using MongoDB.Driver;
 using WebAPI.Dto.Product;
-using WebAPI.Services.Image;
+using WebAPI.View.Product;
+using MongoDB.Driver;
 using MongoDB.Bson;
+using WebAPI.models;
 
 namespace WebAPI.Services.Product
 {
-    public class ProductService(
-        AppDbContext context, ImageService imageService) : IProductInterface
+    public class ProductService : IProductInterface
     {
-        private readonly AppDbContext _context = context;
-        private readonly ImageService _imageService = imageService;
+        private readonly AppDbContext _context;
+        private readonly IProductView _productView;
+
+        public ProductService(AppDbContext context, IProductView view)
+        {
+            _context = context;
+            _productView = view;
+        }
 
         public async Task<ResponseModel<GetProductDto>> CreateProduct(CreateProductDto newProduct)
         {
@@ -39,22 +44,12 @@ namespace WebAPI.Services.Product
                     return resposta;
                 }
 
-                var ids = _imageService.CreateImages(newProduct.Files);
+                ProductModel product = await _productView.CreateProduct(newProduct, newCategory);
 
-                var product = new ProductModel {
-                    Name = newProduct.Name,
-                    Description = newProduct.Description,
-                    Price = newProduct.Price,
-                    Sale = newProduct.Sale,
-                    Quantity = newProduct.Quantity,
-                    Category = new List<CategoryModel> { newCategory },
-                    ImagesId = await ids
-                };
                 // Insere um novo objeto ProductModel na coleção de produtos
                 await _context.Products.InsertOneAsync(product);
 
                 resposta.Message = "Product created successfully.";
-                resposta.Status = true;
                 resposta.Data = new GetProductDto
                 {
                     Name = product.Name,
@@ -69,14 +64,14 @@ namespace WebAPI.Services.Product
             catch (Exception)
             {
                 resposta.Message = "An unexpected error occurred while creating the product.";
-                resposta.Status = false;
             }
+            resposta.Status = true;
             return resposta;
         }
 
         public async Task<ResponseModel<ProductModel>> GetProduct(string Id)
         {
-            ResponseModel<ProductModel> resposta = new();
+            var resposta = new ResponseModel<ProductModel>();
 
             try{
                 var product = await _context.Products.Find(bankProduct => bankProduct.Id == Id).FirstOrDefaultAsync();
@@ -86,12 +81,11 @@ namespace WebAPI.Services.Product
                     return resposta;
                 }
                 resposta.Data = product;
-                resposta.Status = true;
                 resposta.Message = $"{product.Name} product.";
+                resposta.Status = true;
                 return resposta;
             }catch(Exception e) {
                 resposta.Message = e.Message;
-                resposta.Status = false;
                 return resposta;
             }
         }
@@ -104,7 +98,7 @@ namespace WebAPI.Services.Product
                     Builders<ProductModel>.Filter.Regex(p => p.Name, new BsonRegularExpression(searchedProduct, "i")),
                     Builders<ProductModel>.Filter.Regex(p => p.Description, new BsonRegularExpression(searchedProduct, "i"))
                 );
-                var products = await _context.Products.Find(filter).ToListAsync();
+                var products = await _context.Products.FindAsync<ProductModel>(filter).Result.ToListAsync();
 
                 if (products == null  || products.Count == 0){
                     resposta.Message = $"Category doesn't exist.";    
@@ -144,9 +138,9 @@ namespace WebAPI.Services.Product
             try{
                 var products = await _context.Products.Find(bankCategory => bankCategory.Category.Any(c => c.Id == Id)).ToListAsync();
                 
-
                 if (products == null  || products.Count == 0){
                     resposta.Message = $"Category doesn't exist.";    
+                    resposta.Status = false;
                     return resposta;
                 }
 
@@ -180,30 +174,10 @@ namespace WebAPI.Services.Product
                 if (category == null)
                 {
                     resposta.Message = $"No category found with name '{updateProduct.Category}'.";
-                    resposta.Status = false;
                     return resposta;
                 }
-                
-                foreach (var property in updateProduct.GetType().GetProperties())
-                {
-                    var newValue = property.GetValue(updateProduct);
-                    if (newValue is string strValue && !string.IsNullOrWhiteSpace(strValue) ||
-                            newValue is not string && newValue != null)
-                    {
-                        var productProperty = product.GetType().GetProperty(property.Name);
+                product = await _productView.UpdateProduct(product, updateProduct, category);
 
-                        if (productProperty != null && productProperty.CanWrite &&
-                            productProperty.Name != "Category" && productProperty.Name != "ImagesId")
-                        {
-                            productProperty.SetValue(product, newValue);
-                        }
-                    }
-                }
-                if (updateProduct.Files != null) {
-                    product.ImagesId = await _imageService.UpdateImages(product.ImagesId, updateProduct.Files);
-                }
-                product.Category = new List<CategoryModel> { category };
-                product.UpdatedAt = DateTime.UtcNow;
                 await _context.Products.ReplaceOneAsync(bankProduct => bankProduct.Id == Id, product);
 
                 resposta.Message = $"Product updated sucessfully.";
@@ -221,7 +195,6 @@ namespace WebAPI.Services.Product
                 return resposta;
             }catch(Exception e) {
                 resposta.Message = e.Message;
-                resposta.Status = false;
                 return resposta;
             }
         }
@@ -230,8 +203,13 @@ namespace WebAPI.Services.Product
         {
             ResponseModel<GetProductDto> resposta = new();
             try{
-                var product = await _context.Products.Find(bankProduct => bankProduct.Id == Id).FirstOrDefaultAsync();
-                await _imageService.DeleteImages(product.ImagesId);
+                var product = await _context.Products.Find(
+                    bankProduct => bankProduct.Id == Id).FirstOrDefaultAsync();
+                var confirm = await _productView.DeleteProductImages(product);
+                if (!confirm) {
+                    resposta.Message = $"Error deleting images.";
+                    return resposta;
+                }
                 var deletedProduct = await _context.Products.DeleteOneAsync(bankProduct => bankProduct.Id == Id);
 
                 if (deletedProduct.DeletedCount == 0){
@@ -252,7 +230,6 @@ namespace WebAPI.Services.Product
                 return resposta;
             }catch(Exception e) {
                 resposta.Message = e.Message;
-                resposta.Status = false;
                 return resposta;
             }
         }

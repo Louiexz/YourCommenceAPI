@@ -1,6 +1,7 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using System.ComponentModel.DataAnnotations;
+using WebAPI.Dto.Category;
 
 namespace WebAPI.models
 {
@@ -28,5 +29,10 @@ namespace WebAPI.models
         [BsonElement("image")]
         [Required(ErrorMessage = "Images are required")]
         public List<string> ImagesId { get; set; }
+
+        public static implicit operator CategoryModel(GetCategoryDto v)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
