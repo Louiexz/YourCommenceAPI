@@ -72,7 +72,7 @@ namespace WebAPI.Services.Image
 
         public async Task<List<string>> UpdateImages(List<string> ids, List<IFormFile> updateImages)
         {
-            List<string> updatedIds = new List<string>(); // Inicializando a lista
+            var updatedIds = new List<string>(); // Inicializando a lista
             try
             {
                 await DeleteImages(ids);

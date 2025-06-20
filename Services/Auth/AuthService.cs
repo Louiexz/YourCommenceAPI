@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Identity;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
@@ -9,6 +8,7 @@ using WebAPI.Data;
 using WebAPI.models;
 using WebAPI.Dto.User;
 using WebAPI.Dto.Auth;
+using WebAPI.View.User;
 
 namespace WebAPI.Services.Auth
 {
@@ -16,22 +16,22 @@ namespace WebAPI.Services.Auth
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _config;
-        private readonly IPasswordHasher<UserModel> _passwordHasher;
         private readonly IMemoryCache _cache;
+        private readonly IUserView _userView;
 
         public AuthService(
             AppDbContext context, IConfiguration config,
-            IPasswordHasher<UserModel> passwordHasher, IMemoryCache cache)
+            IMemoryCache cache, IUserView view)
         {
             _context = context;
             _config = config;
-            _passwordHasher = passwordHasher;
             _cache = cache;
+            _userView = view;
         }
-
+        
         public async Task<ResponseModel<AuthResponseDto>> SignIn(LoginDto userLogin)
         {
-            ResponseModel<AuthResponseDto> resposta = new ResponseModel<AuthResponseDto>();
+            var resposta = new ResponseModel<AuthResponseDto>();
 
             try
             {
@@ -58,10 +58,9 @@ namespace WebAPI.Services.Auth
                 }
 
                 // Hash da senha fornecida
-                var result = _passwordHasher.VerifyHashedPassword(
-                    registeredUser, registeredUser.Password, userLogin.Password);
+                var result = _userView.CheckPassword(registeredUser, userLogin.Password);
 
-                if (result == PasswordVerificationResult.Failed)
+                if (!result)
                 {
                     resposta.Message = "Wrong password or credential.";
                     resposta.Status = false;
@@ -91,16 +90,20 @@ namespace WebAPI.Services.Auth
         }
         public async Task<ResponseModel<GetUserDto>> SignUp(CreateUserDto newUser)
         {
-            ResponseModel<GetUserDto> resposta = new ResponseModel<GetUserDto>();
+            var resposta = new ResponseModel<GetUserDto>();
             try{
-                var checkUserEmail = await _context.Users.Find(bankCategory => bankCategory.Email == newUser.Email).FirstOrDefaultAsync();
+                var checkUserEmail = await _context.Users
+                    .Find(u => u.Email == newUser.Email)
+                    .FirstOrDefaultAsync();
 
                 if (checkUserEmail != null){
                     resposta.Message = $"Email already taken.";    
                     resposta.Status = false;
                     return resposta;
                 }
-                var checkUserUsername = await _context.Users.Find(bankCategory => bankCategory.Username == newUser.Username).FirstOrDefaultAsync();
+                var checkUserUsername = await _context.Users
+                    .Find(u => u.Username == newUser.Username)
+                    .FirstOrDefaultAsync();
 
                 if (checkUserUsername != null){
                     resposta.Message = $"Username already taken.";
@@ -108,18 +111,10 @@ namespace WebAPI.Services.Auth
                     return resposta;
                 }
 
-                UserModel user = new UserModel
-                {
-                    Username = newUser.Username,
-                    Email = newUser.Email,
-                    Password = newUser.Password,
-                };
-                if (user.Type == UserType.Admin)
-                {
-                    user.Type = UserType.Cliente;
-                }
+                UserModel user = _userView.CreateUser(newUser);
 
-                user.Password = HashPassword(user, newUser.Password);
+                user.Type = user.Type == UserType.Admin ? UserType.Cliente : user.Type;
+
                 await _context.Users.InsertOneAsync(user);
 
                 resposta.Message = $"User created sucessfully.";
@@ -135,14 +130,9 @@ namespace WebAPI.Services.Auth
             }
         }
 
-        public string HashPassword(UserModel user, string password)
-        {
-            return _passwordHasher.HashPassword(user, password);;
-        }
-
         public ResponseModel<string> LogOut(string token)
         {
-            ResponseModel<string> resposta = new ResponseModel<string>();
+            var resposta = new ResponseModel<string>();
             try
             {
                 var jwtTokenHandler = new JwtSecurityTokenHandler();

@@ -9,7 +9,6 @@ namespace WebAPI.Services.Auth
         Task<ResponseModel<AuthResponseDto>> SignIn(LoginDto user);
         Task<ResponseModel<GetUserDto>> SignUp(CreateUserDto newUser);
         ResponseModel<string> LogOut(string token);
-        string HashPassword(UserModel user, string password);
         string GenerateJwtToken(UserModel user);
     }
 }
